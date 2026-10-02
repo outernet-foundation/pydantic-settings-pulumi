@@ -1,0 +1,12 @@
+name: setup-release-devkit
+description: Install release-devkit at the pinned commit into RUNNER_TEMP
+runs:
+  using: composite
+  steps:
+    - uses: astral-sh/setup-uv@v7
+      with:
+        enable-cache: true
+    - shell: bash
+      run: >
+        git clone https://github.com/outernet-foundation/release-devkit.git "$RUNNER_TEMP/release-devkit"
+        && git -C "$RUNNER_TEMP/release-devkit" checkout 601575795d7e9f900121e4a278bd05aac41972c6
