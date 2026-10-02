@@ -1,6 +1,1 @@
 extend = "ruff.base.toml"
-
-[lint.extend-per-file-ignores]
-# pydantic-settings calls settings_customise_sources with keyword arguments, so the
-# four source parameter names are load-bearing; three stay unused by design
-"src/pydantic_settings_pulumi/settings.py" = ["unused-class-method-argument"]
