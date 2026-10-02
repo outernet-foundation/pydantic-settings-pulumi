@@ -1,4 +1,4 @@
-from typing import Any, Self, get_origin
+from typing import Any, Self, get_origin, override
 
 from pulumi import Config, Output
 from pydantic.fields import FieldInfo
@@ -33,6 +33,7 @@ class PulumiSettings(BaseSettings):
         return cls()
 
     @classmethod
+    @override
     def settings_customise_sources(
         cls,
         settings_cls: type[BaseSettings],

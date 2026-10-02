@@ -37,11 +37,13 @@ census-specific fields never move here.
   `get_origin(field.annotation) is Output` — the branch ordering in `get_field_value`
   matters: `get_origin` on a plain annotation is `None`, so the Output and list/dict
   branches precede the plain-get fallback.
-- **The `settings_customise_sources` signature is fixed by pydantic-settings** — its
-  four source parameters are mandated names we don't all consume, which is why
-  `ruff.toml` carries `lint.extend-per-file-ignores` for
-  `unused-class-method-argument` on `settings.py` (extend-key form only; plain keys
-  replace the canonical settings and fail the drift gate).
+- **The `settings_customise_sources` signature is fixed by pydantic-settings** —
+  the library calls the hook with keyword arguments, so the four source parameter
+  names are load-bearing and the three declined sources must stay declared
+  (underscore-prefixing dies at construction with a TypeError). `@typing.override`
+  (PEP 698) marks the method as an override: ruff's unused-argument rules exempt
+  `@override`-decorated methods, and pyright verifies the hook still exists
+  upstream — no suppression layer (`ruff.toml` is a bare extend).
 
 ## Tests
 
@@ -62,16 +64,21 @@ committed `pyproject.toml` version is permanently the `0.0.0.dev0` sentinel; ver
 ride the declared `major_minor` line (`"0.1"` in `release-devkit.yaml`) on the
 `pydantic-settings-pulumi-v*` tag ledger. Two workflow files split by triggering event:
 `integrate.yml` (PR to `dev` + dispatch) runs `preflight` — ledger checkout,
-`checkout-release-devkit` wrapper, `lint-ci`, then `uv run preflight-python` (python-devkit
-lives in the dev group; this repo is an ordinary consumer, not a name-shadowing case like
-bashrun/ci-devkit, so no `tools/devkit` sidecar) and `publish-stable --dry-run` as the
-trailing step. `publish.yml` (push to `main`/`dev`, concurrency queues without cancel)
+the `setup-release-devkit` wrapper, the `lint-ci` run step, then
+`uv run preflight-python` (python-devkit lives in the dev group; this repo is an
+ordinary consumer, not a name-shadowing case like bashrun/ci-devkit, so no
+`tools/devkit` sidecar) and the `publish-stable --dry-run` run step as the trailing
+step. `publish.yml` (push to `main`/`dev`, concurrency queues without cancel)
 runs `ensure-release-pr` and `publish-prerelease` on `dev`, `publish-stable` on `main`,
 under OIDC trusted publishing (publisher bound to `publish.yml`, `release` environment).
-The devkit checkout is pinned once in `.github/actions/checkout-release-devkit/action.yml`
-(the wrapper around release-devkit's self-versioning action); every verb-owning job
-checks the consumer repo out first, then the wrapper, then
-`uses: ./.release-devkit/.github/actions/<verb>`. Publishing to PyPI is the devkit's
+The devkit is installed onto the machine by the wrapper —
+`.github/actions/setup-release-devkit/action.yml`, the one place the pinned devkit
+commit SHA appears: setup-uv, then a tokenless `git clone` into
+`$RUNNER_TEMP/release-devkit` (outside the workspace, so this repo's own deptry/ruff
+battery never scans devkit code). Verbs are plain run steps —
+`uv run --project "$RUNNER_TEMP/release-devkit" --locked --no-dev <verb>` from the
+repo root, with the env each verb needs (`GH_TOKEN`, `CI_REGISTRY_*`) spelled in the
+step. Publishing to PyPI is the devkit's
 `PyPIRegistry` (`uv build` + `uv publish` with `--check-url` idempotency) — never inline
 `uv build`/publish steps here. The operator owns the initial trusted-publisher
 registration and every push.
