@@ -1,0 +1,41 @@
+[project]
+name = "pydantic-settings-pulumi"
+version = "0.1.0"
+description = "pydantic-settings source for Pulumi programs: typed settings classes over pulumi.Config"
+requires-python = ">=3.13"
+dependencies = [
+    "pulumi>=3.267.0",
+    "pydantic>=2.13.5",
+    "pydantic-settings>=2.15.0",
+]
+
+[dependency-groups]
+dev = [
+    "basedpyright>=1.39.6",
+    "ruff>=0.15.16",
+    "pytest>=8.0.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/pydantic_settings_pulumi"]
+include = [
+    "src/pydantic_settings_pulumi/py.typed",
+]
+
+[tool.ruff]
+line-length = 120
+target-version = "py313"
+
+[tool.basedpyright]
+typeCheckingMode = "strict"
+pythonVersion = "3.13"
+include = ["src", "tests"]
+venvPath = "."
+venv = ".venv"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
