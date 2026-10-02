@@ -37,6 +37,11 @@ census-specific fields never move here.
   `get_origin(field.annotation) is Output` — the branch ordering in `get_field_value`
   matters: `get_origin` on a plain annotation is `None`, so the Output and list/dict
   branches precede the plain-get fallback.
+- **The `settings_customise_sources` signature is fixed by pydantic-settings** — its
+  four source parameters are mandated names we don't all consume, which is why
+  `ruff.toml` carries `lint.extend-per-file-ignores` for
+  `unused-class-method-argument` on `settings.py` (extend-key form only; plain keys
+  replace the canonical settings and fail the drift gate).
 
 ## Tests
 
@@ -46,17 +51,36 @@ test bags use `project:`-prefixed keys. `get_object` fields need the bag value t
 JSON *string* (the getter JSON-parses it); `get_secret` works engine-less (the Output is
 opaque — assert isinstance only, never resolve it). `SETTINGS.project` defaulting to
 `"project"` was verified on pulumi 3.267.0; the pulumi floor pin is tied to that probe.
+The toolchain is pinned to 3.13 (`.python-version`): engine-less `Output` construction
+hard-fails on 3.14 (`asyncio.get_event_loop()` raises without a running loop); a bump
+past 3.13 must re-probe that first.
 
-## Versioning
+## Release flow
 
-The pyproject version is real (no release-devkit sentinel patching — this package is not
-devkit-managed and must not depend on the machinery it precedes). Publish flow: bump
-pyproject, cut a GitHub release, `publish.yml` builds and publishes via trusted-publisher
-OIDC. The operator owns repo creation, the PyPI trusted-publisher registration
-(owner/repo/workflow binding to `publish.yml`), and releases.
+Org-standard release-devkit consumption, same shape as every other python repo. The
+committed `pyproject.toml` version is permanently the `0.0.0.dev0` sentinel; versions
+ride the declared `major_minor` line (`"0.1"` in `release-devkit.yaml`) on the
+`pydantic-settings-pulumi-v*` tag ledger. Two workflow files split by triggering event:
+`integrate.yml` (PR to `dev` + dispatch) runs `preflight` — ledger checkout,
+`checkout-release-devkit` wrapper, `lint-ci`, then `uv run preflight-python` (python-devkit
+lives in the dev group; this repo is an ordinary consumer, not a name-shadowing case like
+bashrun/ci-devkit, so no `tools/devkit` sidecar) and `publish-stable --dry-run` as the
+trailing step. `publish.yml` (push to `main`/`dev`, concurrency queues without cancel)
+runs `ensure-release-pr` and `publish-prerelease` on `dev`, `publish-stable` on `main`,
+under OIDC trusted publishing (publisher bound to `publish.yml`, `release` environment).
+The devkit checkout is pinned once in `.github/actions/checkout-release-devkit/action.yml`
+(the wrapper around release-devkit's self-versioning action); every verb-owning job
+checks the consumer repo out first, then the wrapper, then
+`uses: ./.release-devkit/.github/actions/<verb>`. Publishing to PyPI is the devkit's
+`PyPIRegistry` (`uv build` + `uv publish` with `--check-url` idempotency) — never inline
+`uv build`/publish steps here. The operator owns the initial trusted-publisher
+registration and every push.
 
 ## Verification
 
-`uv run ruff check src/ tests/`, `uv run ruff format --check src/ tests/`,
-`uv run basedpyright`, `uv run pytest` — all must be clean; CI runs the same battery in
-`.github/workflows/integrate.yml`. `actionlint` on both workflow files.
+`uv run preflight-python` — the org's fixed battery (sync, ruff check, ruff format,
+basedpyright, deptry, lock staleness, ruff drift, pytest) — must pass; CI runs the same
+command in `integrate.yml`. `actionlint` on both workflow files. `ruff.base.toml` is
+verb-written from python-devkit's canonical config — regenerate with
+`uvx --from python-devkit sync-ruff`, never hand-edit it; repo-local ruff deltas go in
+`ruff.toml` using extend-key forms only.

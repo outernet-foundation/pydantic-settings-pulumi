@@ -78,9 +78,13 @@ os.environ["PULUMI_CONFIG"] = json.dumps({
 
 ## Versioning and publishing
 
-The `pyproject.toml` version is the real version (no sentinel patching). Publishing is
-`publish.yml` on GitHub release: `uv build` + trusted-publisher OIDC to PyPI, no stored
-tokens.
+The committed `pyproject.toml` version is permanently the `0.0.0.dev0` sentinel; real
+versions come from the `pydantic-settings-pulumi-v*` tag ledger (declared `major_minor`
+line in `release-devkit.yaml`, patch-auto within the line). Publishing rides the org's
+release-devkit machinery, like every other python repo: pushes to `dev` publish
+immutable `-dev.<run-id>` prereleases, a standing release PR gates `dev` → `main`, and
+a merge to `main` publishes the stable version, tags it, and cuts the GitHub Release —
+via trusted-publisher OIDC (publisher bound to `publish.yml`), no stored tokens.
 
 ## Why a separate package
 
