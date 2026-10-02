@@ -30,9 +30,13 @@ census-specific fields never move here.
 - **The two re-export import paths.** `FieldInfo` imports from `pydantic.fields` and
   `PydanticBaseEnvSettingsSource` from `pydantic_settings.sources` — the top-level
   re-exports resolve to Unknown under basedpyright strict. Do not "simplify" them.
-- **The three model_config flags** (`arbitrary_types_allowed`, `case_sensitive=True`,
-  `enable_decoding=False`) are load-bearing as a set; see README for what each
-  neutralizes. Removing any one kills subclass construction.
+- **The three model_config flags are load-bearing as a set.**
+  `arbitrary_types_allowed=True` permits the `Output[str]` secret annotations;
+  `case_sensitive=True` disables pydantic-settings' inherited case-folding
+  machinery, meaningless when the only source reads exact Pulumi keys;
+  `enable_decoding=False` stops the inherited assembly loop from JSON-decoding
+  complex-typed fields (Pulumi's `get_object` already returns parsed values).
+  Removing any one kills subclass construction.
 - **Secret fields are `Output[str]` annotations** routed to `get_secret` by
   `get_origin(field.annotation) is Output` — the branch ordering in `get_field_value`
   matters: `get_origin` on a plain annotation is `None`, so the Output and list/dict
@@ -59,29 +63,12 @@ past 3.13 must re-probe that first.
 
 ## Release flow
 
-Org-standard release-devkit consumption, same shape as every other python repo. The
-committed `pyproject.toml` version is permanently the `0.0.0.dev0` sentinel; versions
-ride the declared `major_minor` line (`"0.1"` in `release-devkit.yaml`) on the
-`pydantic-settings-pulumi-v*` tag ledger. Two workflow files split by triggering event:
-`integrate.yml` (PR to `dev` + dispatch) runs `preflight` — ledger checkout,
-the `setup-release-devkit` wrapper, the `lint-ci` run step, then
-`uv run preflight-python` (python-devkit lives in the dev group; this repo is an
-ordinary consumer, not a name-shadowing case like bashrun/ci-devkit, so no
-`tools/devkit` sidecar) and the `publish-stable --dry-run` run step as the trailing
-step. `publish.yml` (push to `main`/`dev`, concurrency queues without cancel)
-runs `ensure-release-pr` and `publish-prerelease` on `dev`, `publish-stable` on `main`,
-under OIDC trusted publishing (publisher bound to `publish.yml`, `release` environment).
-The devkit is installed onto the machine by the wrapper —
-`.github/actions/setup-release-devkit/action.yml`, the one place the pinned devkit
-commit SHA appears: setup-uv, then a tokenless `git clone` into
-`$RUNNER_TEMP/release-devkit` (outside the workspace, so this repo's own deptry/ruff
-battery never scans devkit code). Verbs are plain run steps —
-`uv run --project "$RUNNER_TEMP/release-devkit" --locked --no-dev <verb>` from the
-repo root, with the env each verb needs (`GH_TOKEN`, `CI_REGISTRY_*`) spelled in the
-step. Publishing to PyPI is the devkit's
-`PyPIRegistry` (`uv build` + `uv publish` with `--check-url` idempotency) — never inline
-`uv build`/publish steps here. The operator owns the initial trusted-publisher
-registration and every push.
+release-devkit's `AGENTS.md` owns the two-workflow contract. Repo-specific
+facts: this repo is an ordinary python-devkit consumer (no name-shadowing, so
+no `tools/devkit` sidecar — python-devkit lives in the dev group), publishing
+to PyPI is the devkit's `PyPIRegistry` (`uv build` + `uv publish` with
+`--check-url` idempotency) — never inline `uv build`/publish steps here — and
+the operator owns the initial trusted-publisher registration and every push.
 
 ## Verification
 
