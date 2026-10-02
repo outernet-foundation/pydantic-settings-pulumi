@@ -23,9 +23,12 @@ jobs:
           fetch-depth: 0
           fetch-tags: true
           persist-credentials: false
-      - &checkout-release-devkit
-        uses: ./.github/actions/checkout-release-devkit
-      - uses: ./.release-devkit/.github/actions/ensure-release-pr
+      - &setup-release-devkit
+        uses: ./.github/actions/setup-release-devkit
+      - name: ensure-release-pr
+        run: uv run --project "$RUNNER_TEMP/release-devkit" --locked --no-dev ensure-release-pr
+        env:
+          GH_TOKEN: ${{ github.token }}
 
   publish-prerelease:
     if: github.ref == 'refs/heads/dev'
@@ -37,8 +40,9 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with: *consumer-ledger
-      - *checkout-release-devkit
-      - uses: ./.release-devkit/.github/actions/publish-prerelease
+      - *setup-release-devkit
+      - name: publish-prerelease
+        run: uv run --project "$RUNNER_TEMP/release-devkit" --locked --no-dev publish-prerelease
 
   publish-stable:
     if: github.ref == 'refs/heads/main'
@@ -52,5 +56,10 @@ jobs:
         with:
           fetch-depth: 0
           fetch-tags: true
-      - *checkout-release-devkit
-      - uses: ./.release-devkit/.github/actions/publish-stable
+      - *setup-release-devkit
+      - name: publish-stable
+        run: uv run --project "$RUNNER_TEMP/release-devkit" --locked --no-dev publish-stable
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CI_REGISTRY_USERNAME: ${{ github.actor }}
+          CI_REGISTRY_TOKEN: ${{ github.token }}

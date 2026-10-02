@@ -1,6 +1,0 @@
-name: checkout-release-devkit
-description: Check out release-devkit at the pinned commit
-runs:
-  using: composite
-  steps:
-    - uses: outernet-foundation/release-devkit/.github/actions/checkout-release-devkit@4acde520ca4df49c5b69723d3a37e53d391f0b88
