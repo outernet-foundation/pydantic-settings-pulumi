@@ -1,0 +1,7 @@
+ci_workflow: publish.yml
+packages:
+  pydantic-settings-pulumi:
+    path: .
+    major_minor: "0.1"
+    registries:
+      pypi: pydantic-settings-pulumi

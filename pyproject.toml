@@ -1,6 +1,6 @@
 [project]
 name = "pydantic-settings-pulumi"
-version = "0.1.0"
+version = "0.0.0.dev0"
 description = "pydantic-settings source for Pulumi programs: typed settings classes over pulumi.Config"
 requires-python = ">=3.13"
 dependencies = [
@@ -14,6 +14,7 @@ dev = [
     "basedpyright>=1.39.6",
     "ruff>=0.15.16",
     "pytest>=8.0.0",
+    "python-devkit>=0.1.0",
 ]
 
 [build-system]
@@ -25,10 +26,6 @@ packages = ["src/pydantic_settings_pulumi"]
 include = [
     "src/pydantic_settings_pulumi/py.typed",
 ]
-
-[tool.ruff]
-line-length = 120
-target-version = "py313"
 
 [tool.basedpyright]
 typeCheckingMode = "strict"
