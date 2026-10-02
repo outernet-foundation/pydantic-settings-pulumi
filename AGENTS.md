@@ -37,11 +37,13 @@ census-specific fields never move here.
   `get_origin(field.annotation) is Output` — the branch ordering in `get_field_value`
   matters: `get_origin` on a plain annotation is `None`, so the Output and list/dict
   branches precede the plain-get fallback.
-- **The `settings_customise_sources` signature is fixed by pydantic-settings** — its
-  four source parameters are mandated names we don't all consume, which is why
-  `ruff.toml` carries `lint.extend-per-file-ignores` for
-  `unused-class-method-argument` on `settings.py` (extend-key form only; plain keys
-  replace the canonical settings and fail the drift gate).
+- **The `settings_customise_sources` signature is fixed by pydantic-settings** —
+  the library calls the hook with keyword arguments, so the four source parameter
+  names are load-bearing and the three declined sources must stay declared
+  (underscore-prefixing dies at construction with a TypeError). `@typing.override`
+  (PEP 698) marks the method as an override: ruff's unused-argument rules exempt
+  `@override`-decorated methods, and pyright verifies the hook still exists
+  upstream — no suppression layer (`ruff.toml` is a bare extend).
 
 ## Tests
 
