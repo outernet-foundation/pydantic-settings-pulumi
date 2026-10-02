@@ -1,0 +1,4 @@
+extend = "ruff.base.toml"
+
+[lint.extend-per-file-ignores]
+"src/pydantic_settings_pulumi/settings.py" = ["unused-class-method-argument"]
