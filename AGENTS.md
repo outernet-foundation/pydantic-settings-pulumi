@@ -17,7 +17,7 @@ census-specific fields never move here.
 ## The quirks this package owns
 
 - **The ABC triple contract.** `get_field_value` returns `(value, field_name, is_complex)`
-  — the second element MUST be the field name, not the derived camelCase config key. The
+  — the second element MUST be the field name, not the derived kebab-case config key. The
   inherited env-source assembly loop uses it as the model-creation key; returning the
   config key makes construction die with missing/extra_forbidden errors. The regression
   test asserts the triple directly.
