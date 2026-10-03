@@ -9,10 +9,10 @@ from pydantic_settings_pulumi.settings import PulumiConfigSource, PulumiSettings
 
 FULL_BAG = {
     "project:enforcement": "active",
-    "project:requiredChecks": '["preflight", "build"]',
+    "project:required-checks": '["preflight", "build"]',
     "project:limits": '{"maxRunners": 3}',
-    "project:mergeBotAppId": "42",
-    "project:mergeBotPrivateKey": "-----BEGIN PRIVATE KEY-----",
+    "project:merge-bot-app-id": "42",
+    "project:merge-bot-private-key": "-----BEGIN PRIVATE KEY-----",
 }
 
 
@@ -24,7 +24,7 @@ class SampleConfig(PulumiSettings):
     merge_bot_private_key: Output[str]
 
 
-def test_plain_fields_read_camel_cased_keys(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_plain_fields_read_kebab_cased_keys(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("PULUMI_CONFIG", json.dumps(FULL_BAG))
     settings = SampleConfig.load()
     assert settings.enforcement == "active"
@@ -58,7 +58,7 @@ def test_get_field_value_triple_carries_field_name(monkeypatch: pytest.MonkeyPat
 
 
 def test_absent_required_key_raises_field_named_error(monkeypatch: pytest.MonkeyPatch) -> None:
-    incomplete = {key: value for key, value in FULL_BAG.items() if "PrivateKey" not in key}
+    incomplete = {key: value for key, value in FULL_BAG.items() if "private-key" not in key}
     monkeypatch.setenv("PULUMI_CONFIG", json.dumps(incomplete))
     with pytest.raises(ValidationError) as excinfo:
         SampleConfig.load()
