@@ -9,8 +9,7 @@ from pydantic_settings.sources import PydanticBaseEnvSettingsSource
 class PulumiConfigSource(PydanticBaseEnvSettingsSource):
     def get_field_value(self, field: FieldInfo, field_name: str) -> tuple[Any, str, bool]:
         project_config = Config()
-        head, *tail = field_name.split("_")
-        key = head + "".join(part.title() for part in tail)
+        key = field_name.replace("_", "-")
         if get_origin(field.annotation) is Output:
             return project_config.get_secret(key), field_name, False
         if get_origin(field.annotation) in (list, dict):
