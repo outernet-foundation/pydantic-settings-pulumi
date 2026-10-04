@@ -7,7 +7,7 @@ inline imports, comments rare and self-contained. This file is package-specific.
 ## What this is
 
 A pydantic-settings source for Pulumi programs, extracted from infra-github-org's config
-adapter (plan-infra-reorg.md Phase A2). Public surface is exactly two names:
+adapter. Public surface is exactly two names:
 `PulumiConfigSource` and `PulumiSettings`, both defined in `settings.py` — `__init__.py`
 is ALWAYS empty (operator ruling; consumers import the submodule and accept the longer
 spelling). Consumers are standalone Pulumi repos that pin a version floor (`>=`) and rely
