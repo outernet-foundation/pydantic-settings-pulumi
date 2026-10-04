@@ -13,21 +13,44 @@ permissions:
   contents: read
 
 jobs:
+  lint-workflows:
+    runs-on: ubuntu-latest
+    steps:
+      - &checkout
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - &uv-restore
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+          save-cache: "false"
+      - &setup-release-devkit
+        uses: ./.github/actions/setup-release-devkit
+      - run: uv run --project "$RUNNER_TEMP/release-devkit" --locked --no-dev lint-workflows
+
   preflight:
+    needs: [lint-workflows]
+    runs-on: ubuntu-latest
+    steps:
+      - *checkout
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+          save-cache: "true"
+      - run: uv run preflight-python
+
+  validate-release-plan:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
         with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          # Perform a full clone, required for tags
           fetch-depth: 0
           fetch-tags: true
           persist-credentials: false
-      - uses: ./.github/actions/setup-release-devkit
-      - name: lint-ci
-        run: uv run --project "$RUNNER_TEMP/release-devkit" --locked --no-dev lint-ci
-      - run: uv run preflight-python
-      - name: publish-stable dry-run
-        run: uv run --project "$RUNNER_TEMP/release-devkit" --locked --no-dev publish-stable --dry-run
-        env:
-          GH_TOKEN: ${{ github.token }}
-          CI_REGISTRY_USERNAME: ${{ github.actor }}
-          CI_REGISTRY_TOKEN: ${{ github.token }}
+      - *uv-restore
+      - *setup-release-devkit
+      - run: uv run --project "$RUNNER_TEMP/release-devkit" --locked --no-dev validate-release-plan

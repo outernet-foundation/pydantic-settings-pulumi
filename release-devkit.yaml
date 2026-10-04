@@ -1,4 +1,4 @@
-ci_workflow: publish.yml
+ci_workflow: release.yml
 packages:
   pydantic-settings-pulumi:
     path: .
