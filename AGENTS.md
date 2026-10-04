@@ -63,7 +63,7 @@ past 3.13 must re-probe that first.
 
 ## Release flow
 
-release-devkit's `AGENTS.md` owns the two-workflow contract. Repo-specific
+release-devkit's `AGENTS.md` owns the three-workflow contract. Repo-specific
 facts: this repo is an ordinary python-devkit consumer (no name-shadowing, so
 no `tools/devkit` sidecar — python-devkit lives in the dev group), publishing
 to PyPI is the devkit's `PyPIRegistry` (`uv build` + `uv publish` with
