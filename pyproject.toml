@@ -23,9 +23,6 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/pydantic_settings_pulumi"]
-include = [
-    "src/pydantic_settings_pulumi/py.typed",
-]
 
 [tool.basedpyright]
 typeCheckingMode = "strict"

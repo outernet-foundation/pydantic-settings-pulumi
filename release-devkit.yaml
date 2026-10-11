@@ -1,7 +1,6 @@
-ci_workflow: release.yml
 packages:
   pydantic-settings-pulumi:
     path: .
-    major_minor: "0.2"
-    registries:
-      pypi: pydantic-settings-pulumi
+    major_minor: "0.3"
+    registry: pypi
+    identity: pydantic-settings-pulumi
