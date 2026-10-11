@@ -63,18 +63,20 @@ past 3.13 must re-probe that first.
 
 ## Release flow
 
-release-devkit's `AGENTS.md` owns the three-workflow contract. Repo-specific
-facts: this repo is an ordinary python-devkit consumer (no name-shadowing, so
-no `tools/devkit` sidecar — python-devkit lives in the dev group), publishing
-to PyPI is the devkit's `PyPIRegistry` (`uv build` + `uv publish` with
+github-actions-toolkit's `AGENTS.md` owns the consumer workflow contract — plain
+`uses:` calls at one pinned toolkit SHA plus the `scripts/preflight.py` sidecar.
+Repo-specific facts: this repo is an ordinary python-devkit consumer (no name-shadowing,
+so no `tools/devkit` install sidecar — python-devkit lives in the dev group), publishing
+to PyPI is the toolkit's `PyPIRegistry` (`uv build` + `uv publish` with
 `--check-url` idempotency) — never inline `uv build`/publish steps here — and
 the operator owns the initial trusted-publisher registration and every push.
 
 ## Verification
 
-`uv run preflight-python` — the org's fixed battery (sync, ruff check, ruff format,
-basedpyright, deptry, lock staleness, ruff drift, pytest) — must pass; CI runs the same
-command in `integrate.yml`. `actionlint` on both workflow files. `ruff.base.toml` is
-verb-written from python-devkit's canonical config — regenerate with
-`uvx --from python-devkit sync-ruff`, never hand-edit it; repo-local ruff deltas go in
-`ruff.toml` using extend-key forms only.
+`uv run --locked preflight-python` — the org's fixed battery (sync, ruff check, ruff
+format, basedpyright, deptry, lock staleness, ruff drift, pytest) — must pass; CI runs the
+same command through the `scripts/preflight.py` sidecar in `integrate.yml`, with the
+toolkit's `lint-workflows` and `validate-release-plan` ahead of it in the called
+preflight. `ruff.base.toml` is verb-written from python-devkit's canonical config —
+regenerate with `uvx --from python-devkit sync-ruff`, never hand-edit it; repo-local ruff
+deltas go in `ruff.toml` using extend-key forms only.
